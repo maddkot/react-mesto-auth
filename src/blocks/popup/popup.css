@@ -11,6 +11,9 @@
 @import url('./__input/_type-error/popup__input_type-error.css');
 @import url('./__title/_delete-card/popup__title_delete-card.css');
 @import url('./__button-delete/popup__button-delete.css');
+@import url('./__icon/popup__icon.css');
+@import url('./__title/_info/popup__title_info.css');
+@import url('./__close-button/_center/popup__close-button_center.css');
 
 .popup {
   position: fixed;

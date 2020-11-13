@@ -9,6 +9,12 @@ import { apiData } from '../utils/Api';
 import EditProfilePopup from './EditProfilePopup';
 import EditAvatarPopup from './EditAvatarPopup';
 import AddPlacePopup from './AddPlacePopup';
+import { Redirect, Route, Switch, useHistory } from 'react-router-dom';
+import Login from './Login';
+import Register from './Register';
+import ProtectedRoute from './ProtectedRoute';
+import InfoTooltip from './InfoTooltip';
+import * as Auth from '../utils/Auth';
 
 function App() {
 
@@ -32,11 +38,25 @@ function App() {
     setSelectCardClick(card)
   }
 
-  function closeAllPopups() {
-    setEditProfile(false)
-    setEditAvatar(false)
-    setAddCard(false)
-    handleCardClick(null)
+  const [isInfoToolTipOpen, setInfoToolTipOpen] = React.useState(false);
+  function handleInfoToolTip() {
+    setInfoToolTipOpen(true);
+  }
+
+  const [loggedIn, setLoggedIn] = React.useState(false);
+
+  const [showMessage, setShowMessage] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [userData, setUserData] = React.useState(null)
+
+  const history = useHistory();
+
+  function closeAllPopups() {    
+    setEditProfile(false);
+    setEditAvatar(false);
+    setAddCard(false);
+    handleCardClick(null);
+    setInfoToolTipOpen(false);    
   }
 
   function closeEscapePopup(event) {
@@ -146,12 +166,114 @@ function App() {
       })  
   }
 
+  function handleRegistration(email, password) {
+    Auth.registration(email, password)
+      .then((res) => {        
+          handleInfoToolTip();
+          setShowMessage(true);
+          history.push('./sign-in');       
+      })
+      .catch((error) => {
+        handleInfoToolTip();
+        setShowMessage(false);        
+        if (error === 400) {
+          console.log('Некорректно заполнено одно из полей');
+          setErrorMessage('Некорректно заполнено одно из полей');
+        }
+      })
+  }
+
+  function handleSubmitLogin(email, password) {
+    Auth.login(email, password)
+    .then((data) => {
+      if (data.token) {          
+        localStorage.setItem('jwt', data.token)
+        return data;
+      } 
+    })  
+      .then((data) => {      
+        if (data.token) {                             
+          setLoggedIn(true);
+          history.push('/');
+      }
+      })
+      .catch((error) => {
+        handleInfoToolTip();
+        setShowMessage(false);
+        if (error === 400) {
+          console.log('Не передано одно из полей');
+          setErrorMessage('Не передано одно из полей');
+        } else if (error === 401) {
+          console.log('Пользователь с таким логином и паролем не найден');
+          setErrorMessage('Пользователь с таким логином и паролем не найден');
+        }
+      })
+    
+  }
+
+   function handleCheckedToken() {
+    const jwt = localStorage.getItem('jwt');
+    if (jwt) {
+      Auth.checkedToken(jwt)
+        .then((res) => {
+          if (res) {            
+            setUserData(res.data.email);
+            setLoggedIn(true);
+            history.push('/')
+          }
+        })
+        .catch((error) => {
+          handleInfoToolTip();
+          setShowMessage(false);
+          if (error === 400) {
+            console.log('Токен не передан или передан не в том формате');
+            setErrorMessage('Токен не передан или передан не в том формате')
+            history.push('./sign-in')
+          } else if (error === 401) {
+            console.log('Переданный токен некорректен');
+            setErrorMessage('Переданный токен некорректен')
+            history.push('./sign-in')
+          }
+      })
+    }
+   }
+  function logout() {
+    localStorage.removeItem('jwt');
+    setLoggedIn(false);
+    history.push('./sign-in');
+  }
+  
+  /* https://stackoverflow.com/questions/55840294/how-to-fix-missing-dependency-warning-when-using-useeffect-react-hook */
+  React.useEffect(() => {    
+    handleCheckedToken();
+    // eslint-disable-next-line react-hooks/exhaustive-deps    
+  }, []) 
+  
+  
+
   return (
     <CurrentUserContext.Provider value={currentUser}>
     <div className="page">       
     
-      <Header />
-      <Main
+      <Header
+        logout={logout}
+        userData={userData}  
+      />
+
+      <Switch>
+          
+      <Route path='/sign-up'>
+            <Register onRegistration={handleRegistration } />
+      </Route>
+          
+      <Route path='/sign-in'>
+            <Login onLogin={handleSubmitLogin} />
+      </Route>
+
+      <ProtectedRoute
+        path="/"
+        loggedIn={loggedIn}
+        component={Main}
         cards={cards}    
         onEditAvatar={handleEditAvatarClick}
         onEditProfile={handleEditProfileClick}
@@ -160,6 +282,12 @@ function App() {
         onCardLike={handleCardLike}
         onCardDelete={handleCardDelete}  
       />
+      
+      <Route exact path="/">
+        {loggedIn ? <Redirect to="/" /> : <Redirect to="/sign-up" />}
+      </Route>    
+      </Switch>
+          
       <Footer />
     
       
@@ -205,6 +333,13 @@ function App() {
     <PopupImage
         card={selectedCard}
         onClose={closeAllPopups}  
+    />
+          
+    <InfoTooltip
+        isOpen={isInfoToolTipOpen}
+        onClose={closeAllPopups}
+        showMessage={showMessage}
+        errorMessage={errorMessage}
     />
         
     </section>

@@ -1,4 +1,9 @@
 @import url("./__logo/header__logo.css");
+@import url("./__menu/header__menu.css");
+@import url('./__authorization/header__authorization.css');
+@import url(./__data-user/header__data-user.css);
+@import url('./__email/header__email.css');
+@import url('./__logout/header__logout.css');
 
 .header {
   max-width: 882px;  
@@ -7,6 +12,8 @@
   border-bottom-style: solid;
   border-bottom-color: #545454;
   border-bottom-width: 1px;
+  display: flex;
+  justify-content: space-between;
 }
 
 @media screen and (max-width: 333px) {
@@ -15,3 +22,10 @@
     padding-top: 28px;
   }
 }
+
+
+
+
+
+
+

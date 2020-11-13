@@ -27,3 +27,5 @@ code {
 @import url(./blocks/popup/_opened/popup_opened.css);
 @import url(./blocks/popup/_add-form/popup_add-form.css);
 @import url(./blocks/element/__button-like/_on/element__button-like_on.css);
+@import url(./blocks/auth-page/auth.css);
+
