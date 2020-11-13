@@ -191,10 +191,11 @@ function App() {
         return data;
       } 
     })  
-      .then((data) => {      
+      .then((data) => {        
         if (data.token) {                             
           setLoggedIn(true);
           history.push('/');
+          setUserData(email);
       }
       })
       .catch((error) => {
